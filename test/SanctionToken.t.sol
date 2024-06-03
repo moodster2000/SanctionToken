@@ -13,24 +13,18 @@ contract SanctionTokenTest is Test {
 
     function setUp() public {
         vm.prank(admin);
-        token = new SanctionToken(1000 ether); // Mint 1000 tokens to admin
-        token.grantRole(token.ADMIN_ROLE(), admin);
-
-        vm.deal(admin, 1 ether);
-        vm.deal(user1, 1 ether);
-        vm.deal(user2, 1 ether);
-        vm.deal(bannedUser, 1 ether);
+        token = new SanctionToken(1000);    
     }
 
     function testInitialSupply() public {
-        assertEq(token.totalSupply(), 1000 ether);
-        assertEq(token.balanceOf(admin), 1000 ether);
+        assertEq(token.totalSupply(), 1000);
+        assertEq(token.balanceOf(admin), 1000);
     }
 
     function testTransfer() public {
         vm.prank(admin);
-        token.transfer(user1, 100 ether);
-        assertEq(token.balanceOf(user1), 100 ether);
+        token.transfer(user1, 100);
+        assertEq(token.balanceOf(user1), 100);
     }
 
     function testBanAddress() public {
@@ -40,30 +34,28 @@ contract SanctionTokenTest is Test {
     }
 
     function testUnbanAddress() public {
-        vm.prank(admin);
+        vm.startPrank(admin);
         token.banAddress(user1);
         token.unbanAddress(user1);
+        vm.stopPrank();
         assertFalse(token.isBanned(user1));
     }
 
     function testBannedCannotTransfer() public {
-        vm.prank(admin);
+        vm.startPrank(admin);
+        token.transfer(bannedUser, 100);
         token.banAddress(bannedUser);
-
-        vm.prank(admin);
-        token.transfer(bannedUser, 100 ether);
+        vm.stopPrank();
 
         vm.prank(bannedUser);
         vm.expectRevert("Account is banned");
-        token.transfer(user1, 10 ether);
+        token.transfer(user1, 10);
     }
 
     function testTransferToBanned() public {
-        vm.prank(admin);
+        vm.startPrank(admin);
         token.banAddress(bannedUser);
-
-        vm.prank(admin);
         vm.expectRevert("Account is banned");
-        token.transfer(bannedUser, 10 ether);
+        token.transfer(bannedUser, 10);
     }
 }
